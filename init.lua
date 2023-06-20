@@ -130,11 +130,28 @@ require('lazy').setup({
   },
 
   {
-    -- Theme inspired by Atom
-    'navarasu/onedark.nvim',
+    -- 'shaunsingh/nord.nvim',
+    -- 'sainnhe/everforest',
+    'sainnhe/gruvbox-material',
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme 'onedark'
+      vim.g.nord_contrast = true
+      vim.g.nord_italic = false
+      vim.g.nord_borders = true
+      -- vim.cmd.colorscheme 'nord'
+      vim.g.everforest_background = 'hard'
+      -- vim.cmd.colorscheme 'everforest'
+      -- vim.g.gruvbox_material_background = 'hard'
+      vim.cmd.colorscheme 'gruvbox-material'
+
+
+      -- turns off LSP semantic tokens by default
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        client.server_capabilities.semanticTokensProvider = nil
+        end,
+      })
     end,
   },
 
@@ -145,7 +162,9 @@ require('lazy').setup({
     opts = {
       options = {
         icons_enabled = false,
-        theme = 'onedark',
+        -- theme = 'nord',
+        -- theme = 'everforest',
+        theme = 'gruvbox-material',
         component_separators = '|',
         section_separators = '',
       },
@@ -191,6 +210,15 @@ require('lazy').setup({
     build = ':TSUpdate',
   },
 
+  'github/copilot.vim',
+
+  {
+    'lukas-reineke/headlines.nvim',
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    opts = {},
+    cond = false,
+  },
+
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -209,6 +237,16 @@ require('lazy').setup({
 -- See `:help vim.o`
 -- NOTE: You can change these options as you wish!
 
+-- set block cursor in insert mode
+vim.opt.guicursor = ""
+
+vim.opt.cursorline = true
+vim.opt.cmdheight = 0
+vim.opt.laststatus = 3
+
+vim.opt.nu = true
+vim.opt.relativenumber = true
+
 -- Set highlight on search
 vim.o.hlsearch = false
 
@@ -218,9 +256,22 @@ vim.wo.number = true
 -- Enable mouse mode
 vim.o.mouse = 'a'
 
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
+-- Enable clipboard integration on WSL2
+-- https://www.reddit.com/r/neovim/comments/10y3t48/comment/j7y7jst
+if vim.fn.has('wsl') == 1 then
+    vim.g.clipboard = {
+        name = 'WslClipboard',
+        copy = {
+            ['+'] = 'clip.exe',
+            ['*'] = 'clip.exe',
+        },
+        paste = {
+            ['+'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+            ['*'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+        },
+        cache_enabled = 0,
+    }
+end
 vim.o.clipboard = 'unnamedplus'
 
 -- Enable break indent
@@ -486,24 +537,25 @@ cmp.setup {
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
-    ['<Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_locally_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
-    ['<S-Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif luasnip.locally_jumpable(-1) then
-        luasnip.jump(-1)
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
+-- disabling Tab mapping to allow Copilot to claim it
+--     ['<Tab>'] = cmp.mapping(function(fallback)
+--       if cmp.visible() then
+--         cmp.select_next_item()
+--       elseif luasnip.expand_or_locally_jumpable() then
+--         luasnip.expand_or_jump()
+--       else
+--         fallback()
+--       end
+--     end, { 'i', 's' }),
+--     ['<S-Tab>'] = cmp.mapping(function(fallback)
+--       if cmp.visible() then
+--         cmp.select_prev_item()
+--       elseif luasnip.locally_jumpable(-1) then
+--         luasnip.jump(-1)
+--       else
+--         fallback()
+--       end
+--     end, { 'i', 's' }),
   },
   sources = {
     { name = 'nvim_lsp' },
